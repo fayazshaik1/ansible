@@ -1,0 +1,49 @@
+
+##Playbook to create the user and config the greoups for ansible agents
+---
+- hosts: localhost
+  become: yes
+
+#### create the groups #####
+  tasks:
+  - name: create the groups
+    user: name={{ item }} state=present 
+    with_items:
+    - group1
+    - group2 
+    tags: add_group
+
+#### create the users ######
+  - name: create the users
+    users: name={{ item }} state=present groups=group1 shell=/bin/bash password=$variable
+    with_items:
+    - user1 
+    - user2
+    tags: add_user
+
+#### generate the keys ######
+  - name: Generating the pubic key for the user
+    user: name={{ item }}
+    generate_ssh_key=yes
+    ssh_key_bits=4096
+    ssh_key_file=.ssh/id_rsa
+    with_items:
+    - user1
+    tags: generate_the_keys
+
+
+### copy the keys ####
+
+  - name: COpy the keys to remote machines
+    authorized_key:
+    user: {{ item }}
+    state: present 
+    key: "{{ lookup ('file' , 'home/user1/.ssh/id_rsa.pub') }}" 
+    with_items:
+    - user1
+    tags: copy_authorized_keys
+  
+
+  - name:
+
+
